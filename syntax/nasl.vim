@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:	Nasl
-" Version:	0.2
+" Version:	0.3
 " Maintainer:	Markus De Shon <markusdes@yahoo.com>
-" Last Change:	2003 December 05
+" Last Change:	2003 December 12
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -12,34 +12,10 @@ elseif exists("b:current_syntax")
   finish
 endif
 
-" http_func.inc
-syn keyword	naslStatement	get_http_banner get_http_port php_ver_match
-syn keyword	naslStatement	http_is_dead check_win_dir_trav http_recv_body
-syn keyword	naslStatement	http_recv_length cgi_dirs
-
-" http_keepalive.inc
-syn keyword	naslStatement	http_keepalive_check_connection enable_keepalive
-syn keyword	naslStatement	http_keepalive_enabled http_keepalive_recv
-syn keyword	naslStatement	on_exit http_keepalive_send_recv 
-syn keyword	naslStatement	check_win_dir_trav_ka is_cgi_installed_ka get_http_page
-
-" smb_nt.inc
-syn keyword	naslStatement	smb_recv netbios_name netbios_redirector_name unicode
-syn keyword	naslStatement	smb_session_request session_extract_uid smb_neg_prot_cleartext
-syn keyword	naslStatement	smb_neg_prot_NTLMv1 smb_neg_prot smb_neg_prot_value
-syn keyword	naslStatement	smb_neg_prot_cs smb_neg_prot_domain smb_session_setup_cleartext
-syn keyword	naslStatement	smb_session_setup_NTLMvN smb_session_setup smb_tconx
-syn keyword	naslStatement	tconx_extract_tid smbntcreatex smbntcreatex_extract_pipe
-syn keyword	naslStatement	pipe_accessible_registry registry_access_step_1 registry_get_key
-syn keyword	naslStatement	registry_key_writeable_by_non_admin registry_get_key_security
-syn keyword	naslStatement	registry_get_acl unicode2 registry_get_item_sz
-syn keyword	naslStatement	registry_decode_sz registry_get_item_dword registry_decode_dword
-syn keyword	naslStatement	registry_get_dword registry_get_sz OpenPipeToSamr
-syn keyword	naslStatement	samr_smbwritex samr_smbreadx samr_uc
-syn keyword	naslStatement	SamrConnect2 _SamrEnumDomains SamrDom2Sid SamrOpenDomain
-syn keyword	naslStatement	SamrOpenBuiltin SamrLookupNames SamrOpenUser SamrQueryUserGroups
-syn keyword	naslStatement	SamrQueryUserInfo SamrQueryUserAliases _ExtractTime
-syn keyword	naslStatement	_SamrDecodeUserInfo OpenAndX ReadAndX smb_get_file_size FindFirst2
+" Set sync minlines higher so that long desc field will not result
+" in weird behavior.  Don't really need to worry about performance,
+" since nasl files are small.
+syntax sync minlines=100 maxlines=500
 
 syn keyword	naslFunction	function
 
@@ -49,7 +25,7 @@ syn keyword	naslRepeat	while for foreach
 "syn keyword	naslStatement	
 
 " Constants
-syn keyword	naslConstant	TRUE FALSE pcap_timeout IPPROTO_TCP IPPROTO_UDP IPPROTO_ICMP
+syn keyword	naslConstant	TRUE FALSE IPPROTO_TCP IPPROTO_UDP IPPROTO_ICMP
 syn keyword	naslConstant	IPROTO_IP IPPROTO_IGMP ENCAPS_IP ENCAPS_SSLv23 ENCAPS_SSLv2
 syn keyword	naslConstant	ENCAPS_SSLv3 ENCAPS_TLSv1 TH_FIN TH_SYN TH_RST TH_PUSH TH_ACK
 syn keyword	naslConstant	TH_URG IP_RF IP_DF IP_MF IP_OFFMASK ACT_INIT ACT_GATHER_INFO
@@ -62,12 +38,15 @@ syn cluster	naslCommentGroup	contains=naslTodo
 syn keyword	naslTodo	contained	TODO
 syn match	naslComment		"#.*$" contains=@naslCommentGroup
 
-" Quoted string
+" Double Quoted string
 syn region	naslString start=/"/ end=/"/ contains=naslNonStringWithinString
 syn region	naslNonStringWithinString start=/\\"/ end=/\\"/ contained
 
+" Single quoted string
+syn region	naslSQString start=/'/ skip=/\\'/ end=/'/ contains=naslSpecificTag
+
 " Enforce no quotes allowed in some other match or region
-syn match	naslNoQuoteRegionError /".*/ contained
+syn match	naslNoQuoteRegionError /[^\\]".*/ contained
 
 " include statements
 syn match	naslIncluded	display contained "\"[^"]*\""
@@ -82,7 +61,7 @@ syn region	naslArgNest	start=+(+ end=+)+ transparent contained
 syn match	naslNumber	/[0-9]\+/
 syn match	naslHexNumber	/0x[0-9A-Fa-f][0-9A-Fa-f]/
 syn match	naslNonKeyword	/[A-Za-z]\+/	contained
-syn cluster	naslArgValues	contains=naslString,naslNonKeyword,naslNumber,naslHexNumber,naslConstant
+syn cluster	naslArgValues	contains=naslString,naslNonKeyword,naslNumber,naslHexNumber,naslConstant,naslSQString
 
 "###########
 " Functions
@@ -506,18 +485,18 @@ syn region	naslFuncXdefined_func	matchgroup=naslFuncXdefined_func start=+defined
 
 " forge_ip_packet
 syn region	naslFuncXforge_ip_packet	matchgroup=naslFuncXforge_ip_packet start=+forge_ip_packet\s*(+ end=+)+ contains=naslArgNest,naslArgXforge_ip_packet,@naslArgValues,@naslNestedFunctions
-syn match	naslArgXforge_ip_packet	/data\:/ contained
-syn match	naslArgXforge_ip_packet	/ip_dst\:/ contained
-syn match	naslArgXforge_ip_packet	/ip_hl\:/ contained
-syn match	naslArgXforge_ip_packet	/ip_id\:/ contained
-syn match	naslArgXforge_ip_packet	/ip_len\:/ contained
-syn match	naslArgXforge_ip_packet	/ip_off\:/ contained
-syn match	naslArgXforge_ip_packet	/ip_p\:/ contained
-syn match	naslArgXforge_ip_packet	/ip_src\:/ contained
-syn match	naslArgXforge_ip_packet	/ip_sum\:/ contained
-syn match	naslArgXforge_ip_packet	/ip_tos\:/ contained
-syn match	naslArgXforge_ip_packet	/ip_ttl\:/ contained
-syn match	naslArgXforge_ip_packet	/ip_v\:/ contained
+syn match	naslArgXforge_ip_packet	/data\s*\:/ contained
+syn match	naslArgXforge_ip_packet	/ip_dst\s*\:/ contained
+syn match	naslArgXforge_ip_packet	/ip_hl\s*\:/ contained
+syn match	naslArgXforge_ip_packet	/ip_id\s*\:/ contained
+syn match	naslArgXforge_ip_packet	/ip_len\s*\:/ contained
+syn match	naslArgXforge_ip_packet	/ip_off\s*\:/ contained
+syn match	naslArgXforge_ip_packet	/ip_p\s*\:/ contained
+syn match	naslArgXforge_ip_packet	/ip_src\s*\:/ contained
+syn match	naslArgXforge_ip_packet	/ip_sum\s*\:/ contained
+syn match	naslArgXforge_ip_packet	/ip_tos\s*\:/ contained
+syn match	naslArgXforge_ip_packet	/ip_ttl\s*\:/ contained
+syn match	naslArgXforge_ip_packet	/ip_v\s*\:/ contained
 
 " get_ip_element
 syn region	naslFuncXget_ip_element	matchgroup=naslFuncXget_ip_element start=+get_ip_element\s*(+ end=+)+ contains=naslArgNest,naslArgXget_ip_element,@naslArgValues,@naslNestedFunctions
@@ -594,13 +573,13 @@ syn match	naslArgXtcp_ping	/port\:/ contained
 
 " forge_udp_packet
 syn region	naslFuncXforge_udp_packet	matchgroup=naslFuncXforge_udp_packet start=+forge_udp_packet\s*(+ end=+)+ contains=naslArgNest,naslArgXforge_udp_packet,@naslArgValues,@naslNestedFunctions
-syn match	naslArgXforge_udp_packet	/data\:/ contained
-syn match	naslArgXforge_udp_packet	/ip\:/ contained
-syn match	naslArgXforge_udp_packet	/uh_dport\:/ contained
-syn match	naslArgXforge_udp_packet	/uh_sport\:/ contained
-syn match	naslArgXforge_udp_packet	/uh_sum\:/ contained
-syn match	naslArgXforge_udp_packet	/uh_ulen\:/ contained
-syn match	naslArgXforge_udp_packet	/update_ip_len\:/ contained
+syn match	naslArgXforge_udp_packet	/data\s*\:/ contained
+syn match	naslArgXforge_udp_packet	/ip\s*\:/ contained
+syn match	naslArgXforge_udp_packet	/uh_dport\s*\:/ contained
+syn match	naslArgXforge_udp_packet	/uh_sport\s*\:/ contained
+syn match	naslArgXforge_udp_packet	/uh_sum\s*\:/ contained
+syn match	naslArgXforge_udp_packet	/uh_ulen\s*\:/ contained
+syn match	naslArgXforge_udp_packet	/update_ip_len\s*\:/ contained
 
 " get_udp_element
 syn region	naslFuncXget_udp_element	matchgroup=naslFuncXget_udp_element start=+get_udp_element\s*(+ end=+)+ contains=naslArgNest,naslArgXget_udp_element,@naslArgValues,@naslNestedFunctions
@@ -728,10 +707,641 @@ syn match	naslArgXntv2_owf_gen	/domain\:/ contained
 syn match	naslArgXntv2_owf_gen	/login\:/ contained
 syn match	naslArgXntv2_owf_gen	/owf\:/ contained
 
+" ###### Functions from include files
+
+" ## http_func.inc
+" hex2dec
+syn region	naslFuncXhex2dec	matchgroup=naslFuncXhex2dec start=+hex2dec\s*(+ end=+)+ contains=naslArgNest,naslArgXhex2dec,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXhex2dec	/xvalue\:/ contained
+
+" get_http_banner
+syn region	naslFuncXget_http_banner	matchgroup=naslFuncXget_http_banner start=+get_http_banner\s*(+ end=+)+ contains=naslArgNest,naslArgXget_http_banner,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXget_http_banner	/port\:/ contained
+
+" get_http_port
+syn region	naslFuncXget_http_port	matchgroup=naslFuncXget_http_port start=+get_http_port\s*(+ end=+)+ contains=naslArgNest,naslArgXget_http_port,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXget_http_port	/default\:/ contained
+
+" php_ver_match
+syn region	naslFuncXphp_ver_match	matchgroup=naslFuncXphp_ver_match start=+php_ver_match\s*(+ end=+)+ contains=naslArgNest,naslArgXphp_ver_match,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXphp_ver_match	/banner\:/ contained
+syn match	naslArgXphp_ver_match	/pattern\:/ contained
+
+" http_is_dead
+syn region	naslFuncXhttp_is_dead	matchgroup=naslFuncXhttp_is_dead start=+http_is_dead\s*(+ end=+)+ contains=naslArgNest,naslArgXhttp_is_dead,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXhttp_is_dead	/port\:/ contained
+syn match	naslArgXhttp_is_dead	/retry\:/ contained
+
+" check_win_dir_trav
+syn region	naslFuncXcheck_win_dir_trav	matchgroup=naslFuncXcheck_win_dir_trav start=+check_win_dir_trav\s*(+ end=+)+ contains=naslArgNest,naslArgXcheck_win_dir_trav,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXcheck_win_dir_trav	/port\:/ contained
+syn match	naslArgXcheck_win_dir_trav	/url\:/ contained
+syn match	naslArgXcheck_win_dir_trav	/quickcheck\:/ contained
+
+" http_recv_body
+syn region	naslFuncXhttp_recv_body	matchgroup=naslFuncXhttp_recv_body start=+http_recv_body\s*(+ end=+)+ contains=naslArgNest,naslArgXhttp_recv_body,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXhttp_recv_body	/socket\:/ contained
+syn match	naslArgXhttp_recv_body	/headers\:/ contained
+syn match	naslArgXhttp_recv_body	/length\:/ contained
+
+" http_recv
+syn region	naslFuncXhttp_recv	matchgroup=naslFuncXhttp_recv start=+http_recv\s*(+ end=+)+ contains=naslArgNest,naslArgXhttp_recv,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXhttp_recv	/socket\:/ contained
+syn match	naslArgXhttp_recv	/code\:/ contained
+
+" http_recv_length
+syn region	naslFuncXhttp_recv_length	matchgroup=naslFuncXhttp_recv_length start=+http_recv_length\s*(+ end=+)+ contains=naslArgNest,naslArgXhttp_recv_length,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXhttp_recv_length	/socket\:/ contained
+syn match	naslArgXhttp_recv_length	/bodylength\:/ contained
+
+" cgi_dirs
+syn region	naslFuncXcgi_dirs	matchgroup=naslFuncXcgi_dirs start=+cgi_dirs\s*(+ end=+)+ contains=naslArgNest,@naslArgValues,@naslNestedFunctions
+
+
+" ### http_keepalive.inc
+" http_keepalive_check_connection
+syn region	naslFuncXhttp_keepalive_check_connection	matchgroup=naslFuncXhttp_keepalive_check_connection start=+http_keepalive_check_connection\s*(+ end=+)+ contains=naslArgNest,naslArgXhttp_keepalive_check_connection,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXhttp_keepalive_check_connection	/headers\:/ contained
+
+" enable_keepalive
+syn region	naslFuncXenable_keepalive	matchgroup=naslFuncXenable_keepalive start=+enable_keepalive\s*(+ end=+)+ contains=naslArgNest,naslArgXenable_keepalive,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXenable_keepalive	/port\:/ contained
+
+" http_keepalive_enabled
+syn region	naslFuncXhttp_keepalive_enabled	matchgroup=naslFuncXhttp_keepalive_enabled start=+http_keepalive_enabled\s*(+ end=+)+ contains=naslArgNest,naslArgXhttp_keepalive_enabled,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXhttp_keepalive_enabled	/port\:/ contained
+
+" http_keepalive_recv
+syn region	naslFuncXhttp_keepalive_recv	matchgroup=naslFuncXhttp_keepalive_recv start=+http_keepalive_recv\s*(+ end=+)+ contains=naslArgNest,naslArgXhttp_keepalive_recv,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXhttp_keepalive_recv	/bodyonly\:/ contained
+
+" on_exit
+syn region	naslFuncXon_exit	matchgroup=naslFuncXon_exit start=+on_exit\s*(+ end=+)+ contains=naslArgNest,@naslArgValues,@naslNestedFunctions
+
+" http_keepalive_send_recv
+syn region	naslFuncXhttp_keepalive_send_recv	matchgroup=naslFuncXhttp_keepalive_send_recv start=+http_keepalive_send_recv\s*(+ end=+)+ contains=naslArgNest,naslArgXhttp_keepalive_send_recv,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXhttp_keepalive_send_recv	/port\:/ contained
+syn match	naslArgXhttp_keepalive_send_recv	/data\:/ contained
+syn match	naslArgXhttp_keepalive_send_recv	/bodyonly\:/ contained
+
+" check_win_dir_trav_ka
+syn region	naslFuncXcheck_win_dir_trav_ka	matchgroup=naslFuncXcheck_win_dir_trav_ka start=+check_win_dir_trav_ka\s*(+ end=+)+ contains=naslArgNest,naslArgXcheck_win_dir_trav_ka,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXcheck_win_dir_trav_ka	/port\:/ contained
+syn match	naslArgXcheck_win_dir_trav_ka	/url\:/ contained
+syn match	naslArgXcheck_win_dir_trav_ka	/quickcheck\:/ contained
+
+" is_cgi_installed_ka
+syn region	naslFuncXis_cgi_installed_ka	matchgroup=naslFuncXis_cgi_installed_ka start=+is_cgi_installed_ka\s*(+ end=+)+ contains=naslArgNest,naslArgXis_cgi_installed_ka,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXis_cgi_installed_ka	/item\:/ contained
+syn match	naslArgXis_cgi_installed_ka	/port\:/ contained
+
+" get_http_page
+syn region	naslFuncXget_http_page	matchgroup=naslFuncXget_http_page start=+get_http_page\s*(+ end=+)+ contains=naslArgNest,naslArgXget_http_page,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXget_http_page	/port\:/ contained
+syn match	naslArgXget_http_page	/url\:/ contained
+syn match	naslArgXget_http_page	/redirect\:/ contained
+
+" ### default_account.inc
+
+" check_account
+syn region	naslFuncXcheck_account	matchgroup=naslFuncXcheck_account start=+check_account\s*(+ end=+)+ contains=naslArgNest,naslArgXcheck_account,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXcheck_account	/login\:/ contained
+syn match	naslArgXcheck_account	/password\:/ contained
+
+
+" ### dump.inc
+" hexdump
+syn region	naslFuncXhexdump	matchgroup=naslFuncXhexdump start=+hexdump\s*(+ end=+)+ contains=naslArgNest,naslArgXhexdump,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXhexdump	/ddata\:/ contained
+
+" dump
+syn region	naslFuncXdump	matchgroup=naslFuncXdump start=+dump\s*(+ end=+)+ contains=naslArgNest,naslArgXdump,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXdump	/ddata\:/ contained
+syn match	naslArgXdump	/dtitle\:/ contained
+
+" ### ftp_func.inc
+" ftp_close
+syn region	naslFuncXftp_close	matchgroup=naslFuncXftp_close start=+ftp_close\s*(+ end=+)+ contains=naslArgNest,naslArgXftp_close,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXftp_close	/socket\:/ contained
+
+" get_ftp_banner
+syn region	naslFuncXget_ftp_banner	matchgroup=naslFuncXget_ftp_banner start=+get_ftp_banner\s*(+ end=+)+ contains=naslArgNest,naslArgXget_ftp_banner,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXget_ftp_banner	/port\:/ contained
+
+" ftp_recv_line
+syn region	naslFuncXftp_recv_line	matchgroup=naslFuncXftp_recv_line start=+ftp_recv_line\s*(+ end=+)+ contains=naslArgNest,naslArgXftp_recv_line,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXftp_recv_line	/socket\:/ contained
+
+" ftp_recv_listing
+syn region	naslFuncXftp_recv_listing	matchgroup=naslFuncXftp_recv_listing start=+ftp_recv_listing\s*(+ end=+)+ contains=naslArgNest,naslArgXftp_recv_listing,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXftp_recv_listing	/socket\:/ contained
+
+" ftp_recv_data
+syn region	naslFuncXftp_recv_data	matchgroup=naslFuncXftp_recv_data start=+ftp_recv_data\s*(+ end=+)+ contains=naslArgNest,naslArgXftp_recv_data,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXftp_recv_data	/socket\:/ contained
+syn match	naslArgXftp_recv_data	/line\:/ contained
+
+" ### misc_func.inc
+" register_service
+syn region	naslFuncXregister_service	matchgroup=naslFuncXregister_service start=+register_service\s*(+ end=+)+ contains=naslArgNest,naslArgXregister_service,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXregister_service	/port\:/ contained
+syn match	naslArgXregister_service	/proto\:/ contained
+
+" known_service
+syn region	naslFuncXknown_service	matchgroup=naslFuncXknown_service start=+known_service\s*(+ end=+)+ contains=naslArgNest,naslArgXknown_service,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXknown_service	/port\:/ contained
+
+" set_mysql_version
+syn region	naslFuncXset_mysql_version	matchgroup=naslFuncXset_mysql_version start=+set_mysql_version\s*(+ end=+)+ contains=naslArgNest,naslArgXset_mysql_version,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXset_mysql_version	/port\:/ contained
+syn match	naslArgXset_mysql_version	/version\:/ contained
+
+" get_mysql_version
+syn region	naslFuncXget_mysql_version	matchgroup=naslFuncXget_mysql_version start=+get_mysql_version\s*(+ end=+)+ contains=naslArgNest,naslArgXget_mysql_version,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXget_mysql_version	/port\:/ contained
+
+" get_unknown_banner
+syn region	naslFuncXget_unknown_banner	matchgroup=naslFuncXget_unknown_banner start=+get_unknown_banner\s*(+ end=+)+ contains=naslArgNest,naslArgXget_unknown_banner,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXget_unknown_banner	/port\:/ contained
+syn match	naslArgXget_unknown_banner	/dontfetch\:/ contained
+
+" set_unknown_banner
+syn region	naslFuncXset_unknown_banner	matchgroup=naslFuncXset_unknown_banner start=+set_unknown_banner\s*(+ end=+)+ contains=naslArgNest,naslArgXset_unknown_banner,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXset_unknown_banner	/port\:/ contained
+syn match	naslArgXset_unknown_banner	/banner\:/ contained
+
+" get_service_banner_line
+syn region	naslFuncXget_service_banner_line	matchgroup=naslFuncXget_service_banner_line start=+get_service_banner_line\s*(+ end=+)+ contains=naslArgNest,naslArgXget_service_banner_line,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXget_service_banner_line	/service\:/ contained
+syn match	naslArgXget_service_banner_line	/port\:/ contained
+
+" get_rpc_port
+syn region	naslFuncXget_rpc_port	matchgroup=naslFuncXget_rpc_port start=+get_rpc_port\s*(+ end=+)+ contains=naslArgNest,naslArgXget_rpc_port,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXget_rpc_port	/program\:/ contained
+syn match	naslArgXget_rpc_port	/protocol\:/ contained
+syn match	naslArgXget_rpc_port	/portmap\:/ contained
+
+" rand_str
+syn region	naslFuncXrand_str	matchgroup=naslFuncXrand_str start=+rand_str\s*(+ end=+)+ contains=naslArgNest,naslArgXrand_str,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXrand_str	/length\:/ contained
+syn match	naslArgXrand_str	/charset\:/ contained
+
+" add_port_in_list
+syn region	naslFuncXadd_port_in_list	matchgroup=naslFuncXadd_port_in_list start=+add_port_in_list\s*(+ end=+)+ contains=naslArgNest,naslArgXadd_port_in_list,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXadd_port_in_list	/list\:/ contained
+syn match	naslArgXadd_port_in_list	/port\:/ contained
+
+" is_private_addr
+syn region	naslFuncXis_private_addr	matchgroup=naslFuncXis_private_addr start=+is_private_addr\s*(+ end=+)+ contains=naslArgNest,naslArgXis_private_addr,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXis_private_addr	/addr\:/ contained
+
+" ### nfs_func.inc
+" padsz
+syn region	naslFuncXpadsz	matchgroup=naslFuncXpadsz start=+padsz\s*(+ end=+)+ contains=naslArgNest,naslArgXpadsz,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXpadsz	/len\:/ contained
+
+" rpclong
+syn region	naslFuncXrpclong	matchgroup=naslFuncXrpclong start=+rpclong\s*(+ end=+)+ contains=naslArgNest,naslArgXrpclong,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXrpclong	/val\:/ contained
+
+" str2long
+syn region	naslFuncXstr2long	matchgroup=naslFuncXstr2long start=+str2long\s*(+ end=+)+ contains=naslArgNest,naslArgXstr2long,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXstr2long	/val\:/ contained
+syn match	naslArgXstr2long	/idx\:/ contained
+
+" rpcpad
+syn region	naslFuncXrpcpad	matchgroup=naslFuncXrpcpad start=+rpcpad\s*(+ end=+)+ contains=naslArgNest,naslArgXrpcpad,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXrpcpad	/pad\:/ contained
+
+" mount
+syn region	naslFuncXmount	matchgroup=naslFuncXmount start=+mount\s*(+ end=+)+ contains=naslArgNest,naslArgXmount,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXmount	/soc\:/ contained
+syn match	naslArgXmount	/share\:/ contained
+
+" readdir
+syn region	naslFuncXreaddir	matchgroup=naslFuncXreaddir start=+readdir\s*(+ end=+)+ contains=naslArgNest,naslArgXreaddir,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXreaddir	/soc\:/ contained
+syn match	naslArgXreaddir	/fid\:/ contained
+
+" cwd
+syn region	naslFuncXcwd	matchgroup=naslFuncXcwd start=+cwd\s*(+ end=+)+ contains=naslArgNest,naslArgXcwd,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXcwd	/soc\:/ contained
+syn match	naslArgXcwd	/dir\:/ contained
+syn match	naslArgXcwd	/fid\:/ contained
+
+" open
+syn region	naslFuncXopen	matchgroup=naslFuncXopen start=+open\s*(+ end=+)+ contains=naslArgNest,naslArgXopen,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXopen	/soc\:/ contained
+syn match	naslArgXopen	/file\:/ contained
+syn match	naslArgXopen	/fid\:/ contained
+
+" read
+syn region	naslFuncXread	matchgroup=naslFuncXread start=+read\s*(+ end=+)+ contains=naslArgNest,naslArgXread,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXread	/soc\:/ contained
+syn match	naslArgXread	/fid\:/ contained
+syn match	naslArgXread	/length\:/ contained
+syn match	naslArgXread	/off\:/ contained
+
+" umount
+syn region	naslFuncXumount	matchgroup=naslFuncXumount start=+umount\s*(+ end=+)+ contains=naslArgNest,naslArgXumount,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXumount	/soc\:/ contained
+syn match	naslArgXumount	/share\:/ contained
+
+" ### pingpong.inc
+" udp_ping_pong
+syn region	naslFuncXudp_ping_pong	matchgroup=naslFuncXudp_ping_pong start=+udp_ping_pong\s*(+ end=+)+ contains=naslArgNest,naslArgXudp_ping_pong,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXudp_ping_pong	/port\:/ contained
+syn match	naslArgXudp_ping_pong	/data\:/ contained
+syn match	naslArgXudp_ping_pong	/answer\:/ contained
+
+" ### smb_nt.inc
+" kb_smb_name
+syn region	naslFuncXkb_smb_name	matchgroup=naslFuncXkb_smb_name start=+kb_smb_name\s*(+ end=+)+ contains=naslArgNest,@naslArgValues,@naslNestedFunctions
+
+" kb_smb_domain
+syn region	naslFuncXkb_smb_domain	matchgroup=naslFuncXkb_smb_domain start=+kb_smb_domain\s*(+ end=+)+ contains=naslArgNest,@naslArgValues,@naslNestedFunctions
+
+" kb_smb_login
+syn region	naslFuncXkb_smb_login	matchgroup=naslFuncXkb_smb_login start=+kb_smb_login\s*(+ end=+)+ contains=naslArgNest,@naslArgValues,@naslNestedFunctions
+
+" kb_smb_password
+syn region	naslFuncXkb_smb_password	matchgroup=naslFuncXkb_smb_password start=+kb_smb_password\s*(+ end=+)+ contains=naslArgNest,@naslArgValues,@naslNestedFunctions
+
+" kb_smb_transport
+syn region	naslFuncXkb_smb_transport	matchgroup=naslFuncXkb_smb_transport start=+kb_smb_transport\s*(+ end=+)+ contains=naslArgNest,@naslArgValues,@naslNestedFunctions
+
+" smb_recv
+syn region	naslFuncXsmb_recv	matchgroup=naslFuncXsmb_recv start=+smb_recv\s*(+ end=+)+ contains=naslArgNest,naslArgXsmb_recv,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXsmb_recv	/socket\:/ contained
+syn match	naslArgXsmb_recv	/length\:/ contained
+
+" netbios_name
+syn region	naslFuncXnetbios_name	matchgroup=naslFuncXnetbios_name start=+netbios_name\s*(+ end=+)+ contains=naslArgNest,naslArgXnetbios_name,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXnetbios_name	/orig\:/ contained
+
+" netbios_redirector_name
+syn region	naslFuncXnetbios_redirector_name	matchgroup=naslFuncXnetbios_redirector_name start=+netbios_redirector_name\s*(+ end=+)+ contains=naslArgNest,@naslArgValues,@naslNestedFunctions
+
+" unicode
+syn region	naslFuncXunicode	matchgroup=naslFuncXunicode start=+unicode\s*(+ end=+)+ contains=naslArgNest,naslArgXunicode,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXunicode	/data\:/ contained
+
+" smb_session_request
+syn region	naslFuncXsmb_session_request	matchgroup=naslFuncXsmb_session_request start=+smb_session_request\s*(+ end=+)+ contains=naslArgNest,naslArgXsmb_session_request,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXsmb_session_request	/soc\:/ contained
+syn match	naslArgXsmb_session_request	/remote\:/ contained
+
+" session_extract_uid
+syn region	naslFuncXsession_extract_uid	matchgroup=naslFuncXsession_extract_uid start=+session_extract_uid\s*(+ end=+)+ contains=naslArgNest,naslArgXsession_extract_uid,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXsession_extract_uid	/reply\:/ contained
+
+" smb_neg_prot_cleartext
+syn region	naslFuncXsmb_neg_prot_cleartext	matchgroup=naslFuncXsmb_neg_prot_cleartext start=+smb_neg_prot_cleartext\s*(+ end=+)+ contains=naslArgNest,naslArgXsmb_neg_prot_cleartext,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXsmb_neg_prot_cleartext	/soc\:/ contained
+
+" smb_neg_prot_NTLMv1
+syn region	naslFuncXsmb_neg_prot_NTLMv1	matchgroup=naslFuncXsmb_neg_prot_NTLMv1 start=+smb_neg_prot_NTLMv1\s*(+ end=+)+ contains=naslArgNest,naslArgXsmb_neg_prot_NTLMv1,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXsmb_neg_prot_NTLMv1	/soc\:/ contained
+
+" smb_neg_prot
+syn region	naslFuncXsmb_neg_prot	matchgroup=naslFuncXsmb_neg_prot start=+smb_neg_prot\s*(+ end=+)+ contains=naslArgNest,naslArgXsmb_neg_prot,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXsmb_neg_prot	/soc\:/ contained
+
+" smb_neg_prot_value
+syn region	naslFuncXsmb_neg_prot_value	matchgroup=naslFuncXsmb_neg_prot_value start=+smb_neg_prot_value\s*(+ end=+)+ contains=naslArgNest,naslArgXsmb_neg_prot_value,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXsmb_neg_prot_value	/prot\:/ contained
+
+" smb_neg_prot_cs
+syn region	naslFuncXsmb_neg_prot_cs	matchgroup=naslFuncXsmb_neg_prot_cs start=+smb_neg_prot_cs\s*(+ end=+)+ contains=naslArgNest,naslArgXsmb_neg_prot_cs,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXsmb_neg_prot_cs	/prot\:/ contained
+
+" smb_neg_prot_domain
+syn region	naslFuncXsmb_neg_prot_domain	matchgroup=naslFuncXsmb_neg_prot_domain start=+smb_neg_prot_domain\s*(+ end=+)+ contains=naslArgNest,naslArgXsmb_neg_prot_domain,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXsmb_neg_prot_domain	/prot\:/ contained
+
+" smb_session_setup_cleartext
+syn region	naslFuncXsmb_session_setup_cleartext	matchgroup=naslFuncXsmb_session_setup_cleartext start=+smb_session_setup_cleartext\s*(+ end=+)+ contains=naslArgNest,naslArgXsmb_session_setup_cleartext,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXsmb_session_setup_cleartext	/soc\:/ contained
+syn match	naslArgXsmb_session_setup_cleartext	/login\:/ contained
+syn match	naslArgXsmb_session_setup_cleartext	/password\:/ contained
+syn match	naslArgXsmb_session_setup_cleartext	/domain\:/ contained
+
+" smb_session_setup_NTLMvN
+syn region	naslFuncXsmb_session_setup_NTLMvN	matchgroup=naslFuncXsmb_session_setup_NTLMvN start=+smb_session_setup_NTLMvN\s*(+ end=+)+ contains=naslArgNest,naslArgXsmb_session_setup_NTLMvN,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXsmb_session_setup_NTLMvN	/soc\:/ contained
+syn match	naslArgXsmb_session_setup_NTLMvN	/login\:/ contained
+syn match	naslArgXsmb_session_setup_NTLMvN	/password\:/ contained
+syn match	naslArgXsmb_session_setup_NTLMvN	/domain\:/ contained
+syn match	naslArgXsmb_session_setup_NTLMvN	/cs\:/ contained
+syn match	naslArgXsmb_session_setup_NTLMvN	/version\:/ contained
+
+" smb_session_setup
+syn region	naslFuncXsmb_session_setup	matchgroup=naslFuncXsmb_session_setup start=+smb_session_setup\s*(+ end=+)+ contains=naslArgNest,naslArgXsmb_session_setup,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXsmb_session_setup	/soc\:/ contained
+syn match	naslArgXsmb_session_setup	/login\:/ contained
+syn match	naslArgXsmb_session_setup	/password\:/ contained
+syn match	naslArgXsmb_session_setup	/domain\:/ contained
+syn match	naslArgXsmb_session_setup	/prot\:/ contained
+
+" smb_tconx
+syn region	naslFuncXsmb_tconx	matchgroup=naslFuncXsmb_tconx start=+smb_tconx\s*(+ end=+)+ contains=naslArgNest,naslArgXsmb_tconx,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXsmb_tconx	/soc\:/ contained
+syn match	naslArgXsmb_tconx	/name\:/ contained
+syn match	naslArgXsmb_tconx	/uid\:/ contained
+syn match	naslArgXsmb_tconx	/share\:/ contained
+
+" tconx_extract_tid
+syn region	naslFuncXtconx_extract_tid	matchgroup=naslFuncXtconx_extract_tid start=+tconx_extract_tid\s*(+ end=+)+ contains=naslArgNest,naslArgXtconx_extract_tid,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXtconx_extract_tid	/reply\:/ contained
+
+" smbntcreatex
+syn region	naslFuncXsmbntcreatex	matchgroup=naslFuncXsmbntcreatex start=+smbntcreatex\s*(+ end=+)+ contains=naslArgNest,naslArgXsmbntcreatex,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXsmbntcreatex	/soc\:/ contained
+syn match	naslArgXsmbntcreatex	/uid\:/ contained
+syn match	naslArgXsmbntcreatex	/tid\:/ contained
+
+" smbntcreatex_extract_pipe
+syn region	naslFuncXsmbntcreatex_extract_pipe	matchgroup=naslFuncXsmbntcreatex_extract_pipe start=+smbntcreatex_extract_pipe\s*(+ end=+)+ contains=naslArgNest,naslArgXsmbntcreatex_extract_pipe,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXsmbntcreatex_extract_pipe	/reply\:/ contained
+
+" pipe_accessible_registry
+syn region	naslFuncXpipe_accessible_registry	matchgroup=naslFuncXpipe_accessible_registry start=+pipe_accessible_registry\s*(+ end=+)+ contains=naslArgNest,naslArgXpipe_accessible_registry,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXpipe_accessible_registry	/soc\:/ contained
+syn match	naslArgXpipe_accessible_registry	/uid\:/ contained
+syn match	naslArgXpipe_accessible_registry	/tid\:/ contained
+syn match	naslArgXpipe_accessible_registry	/pipe\:/ contained
+
+" registry_access_step_1
+syn region	naslFuncXregistry_access_step_1	matchgroup=naslFuncXregistry_access_step_1 start=+registry_access_step_1\s*(+ end=+)+ contains=naslArgNest,naslArgXregistry_access_step_1,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXregistry_access_step_1	/soc\:/ contained
+syn match	naslArgXregistry_access_step_1	/uid\:/ contained
+syn match	naslArgXregistry_access_step_1	/tid\:/ contained
+syn match	naslArgXregistry_access_step_1	/pipe\:/ contained
+
+" registry_get_key
+syn region	naslFuncXregistry_get_key	matchgroup=naslFuncXregistry_get_key start=+registry_get_key\s*(+ end=+)+ contains=naslArgNest,naslArgXregistry_get_key,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXregistry_get_key	/soc\:/ contained
+syn match	naslArgXregistry_get_key	/uid\:/ contained
+syn match	naslArgXregistry_get_key	/tid\:/ contained
+syn match	naslArgXregistry_get_key	/pipe\:/ contained
+syn match	naslArgXregistry_get_key	/key\:/ contained
+syn match	naslArgXregistry_get_key	/reply\:/ contained
+
+" registry_key_writeable_by_non_admin
+syn region	naslFuncXregistry_key_writeable_by_non_admin	matchgroup=naslFuncXregistry_key_writeable_by_non_admin start=+registry_key_writeable_by_non_admin\s*(+ end=+)+ contains=naslArgNest,naslArgXregistry_key_writeable_by_non_admin,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXregistry_key_writeable_by_non_admin	/security_descriptor\:/ contained
+
+" registry_get_key_security
+syn region	naslFuncXregistry_get_key_security	matchgroup=naslFuncXregistry_get_key_security start=+registry_get_key_security\s*(+ end=+)+ contains=naslArgNest,naslArgXregistry_get_key_security,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXregistry_get_key_security	/soc\:/ contained
+syn match	naslArgXregistry_get_key_security	/uid\:/ contained
+syn match	naslArgXregistry_get_key_security	/tid\:/ contained
+syn match	naslArgXregistry_get_key_security	/pipe\:/ contained
+syn match	naslArgXregistry_get_key_security	/reply\:/ contained
+
+" registry_get_acl
+syn region	naslFuncXregistry_get_acl	matchgroup=naslFuncXregistry_get_acl start=+registry_get_acl\s*(+ end=+)+ contains=naslArgNest,naslArgXregistry_get_acl,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXregistry_get_acl	/key\:/ contained
+
+" unicode2
+syn region	naslFuncXunicode2	matchgroup=naslFuncXunicode2 start=+unicode2\s*(+ end=+)+ contains=naslArgNest,naslArgXunicode2,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXunicode2	/data\:/ contained
+
+" registry_get_item_sz
+syn region	naslFuncXregistry_get_item_sz	matchgroup=naslFuncXregistry_get_item_sz start=+registry_get_item_sz\s*(+ end=+)+ contains=naslArgNest,naslArgXregistry_get_item_sz,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXregistry_get_item_sz	/soc\:/ contained
+syn match	naslArgXregistry_get_item_sz	/uid\:/ contained
+syn match	naslArgXregistry_get_item_sz	/tid\:/ contained
+syn match	naslArgXregistry_get_item_sz	/pipe\:/ contained
+syn match	naslArgXregistry_get_item_sz	/item\:/ contained
+syn match	naslArgXregistry_get_item_sz	/reply\:/ contained
+
+" registry_decode_sz
+syn region	naslFuncXregistry_decode_sz	matchgroup=naslFuncXregistry_decode_sz start=+registry_decode_sz\s*(+ end=+)+ contains=naslArgNest,naslArgXregistry_decode_sz,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXregistry_decode_sz	/data\:/ contained
+
+" registry_get_item_dword
+syn region	naslFuncXregistry_get_item_dword	matchgroup=naslFuncXregistry_get_item_dword start=+registry_get_item_dword\s*(+ end=+)+ contains=naslArgNest,naslArgXregistry_get_item_dword,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXregistry_get_item_dword	/soc\:/ contained
+syn match	naslArgXregistry_get_item_dword	/uid\:/ contained
+syn match	naslArgXregistry_get_item_dword	/tid\:/ contained
+syn match	naslArgXregistry_get_item_dword	/pipe\:/ contained
+syn match	naslArgXregistry_get_item_dword	/item\:/ contained
+syn match	naslArgXregistry_get_item_dword	/reply\:/ contained
+
+" registry_decode_dword
+syn region	naslFuncXregistry_decode_dword	matchgroup=naslFuncXregistry_decode_dword start=+registry_decode_dword\s*(+ end=+)+ contains=naslArgNest,naslArgXregistry_decode_dword,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXregistry_decode_dword	/data\:/ contained
+
+" registry_get_dword
+syn region	naslFuncXregistry_get_dword	matchgroup=naslFuncXregistry_get_dword start=+registry_get_dword\s*(+ end=+)+ contains=naslArgNest,naslArgXregistry_get_dword,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXregistry_get_dword	/key\:/ contained
+syn match	naslArgXregistry_get_dword	/item\:/ contained
+
+" registry_get_sz
+syn region	naslFuncXregistry_get_sz	matchgroup=naslFuncXregistry_get_sz start=+registry_get_sz\s*(+ end=+)+ contains=naslArgNest,naslArgXregistry_get_sz,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXregistry_get_sz	/key\:/ contained
+syn match	naslArgXregistry_get_sz	/item\:/ contained
+
+" OpenPipeToSamr
+syn region	naslFuncXOpenPipeToSamr	matchgroup=naslFuncXOpenPipeToSamr start=+OpenPipeToSamr\s*(+ end=+)+ contains=naslArgNest,naslArgXOpenPipeToSamr,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXOpenPipeToSamr	/soc\:/ contained
+syn match	naslArgXOpenPipeToSamr	/uid\:/ contained
+syn match	naslArgXOpenPipeToSamr	/tid\:/ contained
+
+" samr_smbwritex
+syn region	naslFuncXsamr_smbwritex	matchgroup=naslFuncXsamr_smbwritex start=+samr_smbwritex\s*(+ end=+)+ contains=naslArgNest,naslArgXsamr_smbwritex,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXsamr_smbwritex	/soc\:/ contained
+syn match	naslArgXsamr_smbwritex	/tid\:/ contained
+syn match	naslArgXsamr_smbwritex	/uid\:/ contained
+syn match	naslArgXsamr_smbwritex	/pipe\:/ contained
+
+" samr_smbreadx
+syn region	naslFuncXsamr_smbreadx	matchgroup=naslFuncXsamr_smbreadx start=+samr_smbreadx\s*(+ end=+)+ contains=naslArgNest,naslArgXsamr_smbreadx,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXsamr_smbreadx	/soc\:/ contained
+syn match	naslArgXsamr_smbreadx	/tid\:/ contained
+syn match	naslArgXsamr_smbreadx	/uid\:/ contained
+syn match	naslArgXsamr_smbreadx	/pipe\:/ contained
+
+" samr_uc
+syn region	naslFuncXsamr_uc	matchgroup=naslFuncXsamr_uc start=+samr_uc\s*(+ end=+)+ contains=naslArgNest,naslArgXsamr_uc,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXsamr_uc	/name\:/ contained
+
+" SamrConnect2
+syn region	naslFuncXSamrConnect2	matchgroup=naslFuncXSamrConnect2 start=+SamrConnect2\s*(+ end=+)+ contains=naslArgNest,naslArgXSamrConnect2,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXSamrConnect2	/soc\:/ contained
+syn match	naslArgXSamrConnect2	/tid\:/ contained
+syn match	naslArgXSamrConnect2	/uid\:/ contained
+syn match	naslArgXSamrConnect2	/pipe\:/ contained
+syn match	naslArgXSamrConnect2	/name\:/ contained
+
+" SamrDom2Sid
+syn region	naslFuncXSamrDom2Sid	matchgroup=naslFuncXSamrDom2Sid start=+SamrDom2Sid\s*(+ end=+)+ contains=naslArgNest,naslArgXSamrDom2Sid,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXSamrDom2Sid	/soc\:/ contained
+syn match	naslArgXSamrDom2Sid	/tid\:/ contained
+syn match	naslArgXSamrDom2Sid	/uid\:/ contained
+syn match	naslArgXSamrDom2Sid	/pipe\:/ contained
+syn match	naslArgXSamrDom2Sid	/samrhdl\:/ contained
+syn match	naslArgXSamrDom2Sid	/dom\:/ contained
+
+" SamrOpenDomain
+syn region	naslFuncXSamrOpenDomain	matchgroup=naslFuncXSamrOpenDomain start=+SamrOpenDomain\s*(+ end=+)+ contains=naslArgNest,naslArgXSamrOpenDomain,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXSamrOpenDomain	/soc\:/ contained
+syn match	naslArgXSamrOpenDomain	/tid\:/ contained
+syn match	naslArgXSamrOpenDomain	/uid\:/ contained
+syn match	naslArgXSamrOpenDomain	/pipe\:/ contained
+syn match	naslArgXSamrOpenDomain	/samrhdl\:/ contained
+syn match	naslArgXSamrOpenDomain	/sid\:/ contained
+
+" SamrOpenBuiltin
+syn region	naslFuncXSamrOpenBuiltin	matchgroup=naslFuncXSamrOpenBuiltin start=+SamrOpenBuiltin\s*(+ end=+)+ contains=naslArgNest,naslArgXSamrOpenBuiltin,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXSamrOpenBuiltin	/soc\:/ contained
+syn match	naslArgXSamrOpenBuiltin	/tid\:/ contained
+syn match	naslArgXSamrOpenBuiltin	/uid\:/ contained
+syn match	naslArgXSamrOpenBuiltin	/pipe\:/ contained
+syn match	naslArgXSamrOpenBuiltin	/samrhdl\:/ contained
+
+" SamrLookupNames
+syn region	naslFuncXSamrLookupNames	matchgroup=naslFuncXSamrLookupNames start=+SamrLookupNames\s*(+ end=+)+ contains=naslArgNest,naslArgXSamrLookupNames,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXSamrLookupNames	/soc\:/ contained
+syn match	naslArgXSamrLookupNames	/uid\:/ contained
+syn match	naslArgXSamrLookupNames	/tid\:/ contained
+syn match	naslArgXSamrLookupNames	/pipe\:/ contained
+syn match	naslArgXSamrLookupNames	/name\:/ contained
+syn match	naslArgXSamrLookupNames	/domhdl\:/ contained
+
+" SamrOpenUser
+syn region	naslFuncXSamrOpenUser	matchgroup=naslFuncXSamrOpenUser start=+SamrOpenUser\s*(+ end=+)+ contains=naslArgNest,naslArgXSamrOpenUser,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXSamrOpenUser	/soc\:/ contained
+syn match	naslArgXSamrOpenUser	/uid\:/ contained
+syn match	naslArgXSamrOpenUser	/tid\:/ contained
+syn match	naslArgXSamrOpenUser	/pipe\:/ contained
+syn match	naslArgXSamrOpenUser	/samrhdl\:/ contained
+syn match	naslArgXSamrOpenUser	/rid\:/ contained
+
+" SamrQueryUserGroups
+syn region	naslFuncXSamrQueryUserGroups	matchgroup=naslFuncXSamrQueryUserGroups start=+SamrQueryUserGroups\s*(+ end=+)+ contains=naslArgNest,naslArgXSamrQueryUserGroups,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXSamrQueryUserGroups	/soc\:/ contained
+syn match	naslArgXSamrQueryUserGroups	/uid\:/ contained
+syn match	naslArgXSamrQueryUserGroups	/tid\:/ contained
+syn match	naslArgXSamrQueryUserGroups	/pipe\:/ contained
+syn match	naslArgXSamrQueryUserGroups	/usrhdl\:/ contained
+
+" SamrQueryUserInfo
+syn region	naslFuncXSamrQueryUserInfo	matchgroup=naslFuncXSamrQueryUserInfo start=+SamrQueryUserInfo\s*(+ end=+)+ contains=naslArgNest,naslArgXSamrQueryUserInfo,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXSamrQueryUserInfo	/soc\:/ contained
+syn match	naslArgXSamrQueryUserInfo	/uid\:/ contained
+syn match	naslArgXSamrQueryUserInfo	/tid\:/ contained
+syn match	naslArgXSamrQueryUserInfo	/pipe\:/ contained
+syn match	naslArgXSamrQueryUserInfo	/usrhdl\:/ contained
+
+" SamrQueryUserAliases
+syn region	naslFuncXSamrQueryUserAliases	matchgroup=naslFuncXSamrQueryUserAliases start=+SamrQueryUserAliases\s*(+ end=+)+ contains=naslArgNest,naslArgXSamrQueryUserAliases,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXSamrQueryUserAliases	/soc\:/ contained
+syn match	naslArgXSamrQueryUserAliases	/uid\:/ contained
+syn match	naslArgXSamrQueryUserAliases	/tid\:/ contained
+syn match	naslArgXSamrQueryUserAliases	/pipe\:/ contained
+syn match	naslArgXSamrQueryUserAliases	/usrhdl\:/ contained
+syn match	naslArgXSamrQueryUserAliases	/sid\:/ contained
+syn match	naslArgXSamrQueryUserAliases	/rid\:/ contained
+
+" OpenAndX
+syn region	naslFuncXOpenAndX	matchgroup=naslFuncXOpenAndX start=+OpenAndX\s*(+ end=+)+ contains=naslArgNest,naslArgXOpenAndX,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXOpenAndX	/socket\:/ contained
+syn match	naslArgXOpenAndX	/uid\:/ contained
+syn match	naslArgXOpenAndX	/tid\:/ contained
+syn match	naslArgXOpenAndX	/file\:/ contained
+
+" ReadAndX
+syn region	naslFuncXReadAndX	matchgroup=naslFuncXReadAndX start=+ReadAndX\s*(+ end=+)+ contains=naslArgNest,naslArgXReadAndX,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXReadAndX	/socket\:/ contained
+syn match	naslArgXReadAndX	/uid\:/ contained
+syn match	naslArgXReadAndX	/tid\:/ contained
+syn match	naslArgXReadAndX	/fid\:/ contained
+syn match	naslArgXReadAndX	/count\:/ contained
+syn match	naslArgXReadAndX	/off\:/ contained
+
+" smb_get_file_size
+syn region	naslFuncXsmb_get_file_size	matchgroup=naslFuncXsmb_get_file_size start=+smb_get_file_size\s*(+ end=+)+ contains=naslArgNest,naslArgXsmb_get_file_size,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXsmb_get_file_size	/socket\:/ contained
+syn match	naslArgXsmb_get_file_size	/uid\:/ contained
+syn match	naslArgXsmb_get_file_size	/tid\:/ contained
+syn match	naslArgXsmb_get_file_size	/fid\:/ contained
+
+" FindFirst2
+syn region	naslFuncXFindFirst2	matchgroup=naslFuncXFindFirst2 start=+FindFirst2\s*(+ end=+)+ contains=naslArgNest,naslArgXFindFirst2,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXFindFirst2	/socket\:/ contained
+syn match	naslArgXFindFirst2	/uid\:/ contained
+syn match	naslArgXFindFirst2	/tid\:/ contained
+syn match	naslArgXFindFirst2	/pattern\:/ contained
+
+" ### smtp_func.inc
+" smtp_close
+syn region	naslFuncXsmtp_close	matchgroup=naslFuncXsmtp_close start=+smtp_close\s*(+ end=+)+ contains=naslArgNest,naslArgXsmtp_close,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXsmtp_close	/socket\:/ contained
+
+" smtp_open
+syn region	naslFuncXsmtp_open	matchgroup=naslFuncXsmtp_open start=+smtp_open\s*(+ end=+)+ contains=naslArgNest,naslArgXsmtp_open,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXsmtp_open	/port\:/ contained
+syn match	naslArgXsmtp_open	/helo\:/ contained
+
+" smtp_send_socket
+syn region	naslFuncXsmtp_send_socket	matchgroup=naslFuncXsmtp_send_socket start=+smtp_send_socket\s*(+ end=+)+ contains=naslArgNest,naslArgXsmtp_send_socket,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXsmtp_send_socket	/socket\:/ contained
+syn match	naslArgXsmtp_send_socket	/from\:/ contained
+syn match	naslArgXsmtp_send_socket	/to\:/ contained
+syn match	naslArgXsmtp_send_socket	/body\:/ contained
+
+" smtp_send_port
+syn region	naslFuncXsmtp_send_port	matchgroup=naslFuncXsmtp_send_port start=+smtp_send_port\s*(+ end=+)+ contains=naslArgNest,naslArgXsmtp_send_port,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXsmtp_send_port	/port\:/ contained
+syn match	naslArgXsmtp_send_port	/from\:/ contained
+syn match	naslArgXsmtp_send_port	/to\:/ contained
+syn match	naslArgXsmtp_send_port	/body\:/ contained
+
+" smtp_from_header
+syn region	naslFuncXsmtp_from_header	matchgroup=naslFuncXsmtp_from_header start=+smtp_from_header\s*(+ end=+)+ contains=naslArgNest,@naslArgValues,@naslNestedFunctions
+
+" smtp_to_header
+syn region	naslFuncXsmtp_to_header	matchgroup=naslFuncXsmtp_to_header start=+smtp_to_header\s*(+ end=+)+ contains=naslArgNest,@naslArgValues,@naslNestedFunctions
+
+" get_smtp_banner
+syn region	naslFuncXget_smtp_banner	matchgroup=naslFuncXget_smtp_banner start=+get_smtp_banner\s*(+ end=+)+ contains=naslArgNest,naslArgXget_smtp_banner,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXget_smtp_banner	/port\:/ contained
+
+" smtp_recv_line
+syn region	naslFuncXsmtp_recv_line	matchgroup=naslFuncXsmtp_recv_line start=+smtp_recv_line\s*(+ end=+)+ contains=naslArgNest,naslArgXsmtp_recv_line,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXsmtp_recv_line	/socket\:/ contained
+syn match	naslArgXsmtp_recv_line	/code\:/ contained
+
+" smtp_recv_banner
+syn region	naslFuncXsmtp_recv_banner	matchgroup=naslFuncXsmtp_recv_banner start=+smtp_recv_banner\s*(+ end=+)+ contains=naslArgNest,naslArgXsmtp_recv_banner,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXsmtp_recv_banner	/socket\:/ contained
+
+" ### telnet_func.inc
+" get_telnet_banner
+syn region	naslFuncXget_telnet_banner	matchgroup=naslFuncXget_telnet_banner start=+get_telnet_banner\s*(+ end=+)+ contains=naslArgNest,naslArgXget_telnet_banner,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXget_telnet_banner	/port\:/ contained
+
+" set_telnet_banner
+syn region	naslFuncXset_telnet_banner	matchgroup=naslFuncXset_telnet_banner start=+set_telnet_banner\s*(+ end=+)+ contains=naslArgNest,naslArgXset_telnet_banner,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXset_telnet_banner	/port\:/ contained
+syn match	naslArgXset_telnet_banner	/banner\:/ contained
+
+" ### uddi.inc
+" create_uddi_xml 
+syn region	naslFuncXcreate_uddi_xml 	matchgroup=naslFuncXcreate_uddi_xml  start=+create_uddi_xml \s*(+ end=+)+ contains=naslArgNest,naslArgXcreate_uddi_xml ,@naslArgValues,@naslNestedFunctions
+syn match	naslArgXcreate_uddi_xml 	/ktype\:/ contained
+syn match	naslArgXcreate_uddi_xml 	/path\:/ contained
+syn match	naslArgXcreate_uddi_xml 	/key\:/ contained
+syn match	naslArgXcreate_uddi_xml 	/name\:/ contained
+
 " ###############
 "  End Functions
 " ###############
 
+" Which of the above functions are nested inside other ones?
+syn cluster naslNestedFunctions	contains=naslFuncXstring,naslFuncXraw_string,naslFuncXcrap,naslFuncXrand,naslFuncXget_kb_item
 
 " Define the default highlighting.
 "
@@ -749,6 +1359,7 @@ if version >= 508 || !exists("did_nasl_syn_inits")
   HiLink naslStatement		Statement
   HiLink naslComment		Comment
   HiLink naslString		String
+  HiLink naslSQString		String
   HiLink naslConstant		Constant
   HiLink naslNoQuoteRegionError	Error
   HiLink naslInclude		Include
@@ -964,6 +1575,240 @@ if version >= 508 || !exists("did_nasl_syn_inits")
   HiLink	naslFuncXlm_owf_gen	naslFunctionCalls
   HiLink naslArgXntv2_owf_gen	naslFunctionArgs
   HiLink	naslFuncXntv2_owf_gen	naslFunctionCalls
+
+" ## Functions from include files
+" http_func.inc
+  HiLink naslArgXhex2dec	naslFunctionArgs
+  HiLink	naslFuncXhex2dec	naslFunctionCalls
+  HiLink naslArgXget_http_banner	naslFunctionArgs
+  HiLink	naslFuncXget_http_banner	naslFunctionCalls
+  HiLink naslArgXget_http_port	naslFunctionArgs
+  HiLink	naslFuncXget_http_port	naslFunctionCalls
+  HiLink naslArgXphp_ver_match	naslFunctionArgs
+  HiLink	naslFuncXphp_ver_match	naslFunctionCalls
+  HiLink naslArgXhttp_is_dead	naslFunctionArgs
+  HiLink	naslFuncXhttp_is_dead	naslFunctionCalls
+  HiLink naslArgXcheck_win_dir_trav	naslFunctionArgs
+  HiLink	naslFuncXcheck_win_dir_trav	naslFunctionCalls
+  HiLink naslArgXhttp_recv_body	naslFunctionArgs
+  HiLink	naslFuncXhttp_recv_body	naslFunctionCalls
+  HiLink naslArgXhttp_recv	naslFunctionArgs
+  HiLink	naslFuncXhttp_recv	naslFunctionCalls
+  HiLink naslArgXhttp_recv_length	naslFunctionArgs
+  HiLink	naslFuncXhttp_recv_length	naslFunctionCalls
+  HiLink	naslFuncXcgi_dirs	naslFunctionCalls
+
+" http_keepalive.inc
+  HiLink naslArgXhttp_keepalive_check_connection	naslFunctionArgs
+  HiLink	naslFuncXhttp_keepalive_check_connection	naslFunctionCalls
+  HiLink naslArgXenable_keepalive	naslFunctionArgs
+  HiLink	naslFuncXenable_keepalive	naslFunctionCalls
+  HiLink naslArgXhttp_keepalive_enabled	naslFunctionArgs
+  HiLink	naslFuncXhttp_keepalive_enabled	naslFunctionCalls
+  HiLink naslArgXhttp_keepalive_recv	naslFunctionArgs
+  HiLink	naslFuncXhttp_keepalive_recv	naslFunctionCalls
+  HiLink	naslFuncXon_exit	naslFunctionCalls
+  HiLink naslArgXhttp_keepalive_send_recv	naslFunctionArgs
+  HiLink	naslFuncXhttp_keepalive_send_recv	naslFunctionCalls
+  HiLink naslArgXcheck_win_dir_trav_ka	naslFunctionArgs
+  HiLink	naslFuncXcheck_win_dir_trav_ka	naslFunctionCalls
+  HiLink naslArgXis_cgi_installed_ka	naslFunctionArgs
+  HiLink	naslFuncXis_cgi_installed_ka	naslFunctionCalls
+  HiLink naslArgXget_http_page	naslFunctionArgs
+  HiLink	naslFuncXget_http_page	naslFunctionCalls
+" default_account.inc
+  HiLink naslArgXcheck_account	naslFunctionArgs
+  HiLink	naslFuncXcheck_account	naslFunctionCalls
+" dump.inc
+  HiLink naslArgXhexdump	naslFunctionArgs
+  HiLink	naslFuncXhexdump	naslFunctionCalls
+  HiLink naslArgXdump	naslFunctionArgs
+  HiLink	naslFuncXdump	naslFunctionCalls
+" ftp_func.inc
+  HiLink naslArgXftp_close	naslFunctionArgs
+  HiLink	naslFuncXftp_close	naslFunctionCalls
+  HiLink naslArgXget_ftp_banner	naslFunctionArgs
+  HiLink	naslFuncXget_ftp_banner	naslFunctionCalls
+  HiLink naslArgXftp_recv_line	naslFunctionArgs
+  HiLink	naslFuncXftp_recv_line	naslFunctionCalls
+  HiLink naslArgXftp_recv_listing	naslFunctionArgs
+  HiLink	naslFuncXftp_recv_listing	naslFunctionCalls
+  HiLink naslArgXftp_recv_data	naslFunctionArgs
+  HiLink	naslFuncXftp_recv_data	naslFunctionCalls
+" misc_func.inc
+  HiLink naslArgXregister_service	naslFunctionArgs
+  HiLink	naslFuncXregister_service	naslFunctionCalls
+  HiLink naslArgXknown_service	naslFunctionArgs
+  HiLink	naslFuncXknown_service	naslFunctionCalls
+  HiLink naslArgXset_mysql_version	naslFunctionArgs
+  HiLink	naslFuncXset_mysql_version	naslFunctionCalls
+  HiLink naslArgXget_mysql_version	naslFunctionArgs
+  HiLink	naslFuncXget_mysql_version	naslFunctionCalls
+  HiLink naslArgXget_unknown_banner	naslFunctionArgs
+  HiLink	naslFuncXget_unknown_banner	naslFunctionCalls
+  HiLink naslArgXset_unknown_banner	naslFunctionArgs
+  HiLink	naslFuncXset_unknown_banner	naslFunctionCalls
+  HiLink naslArgXget_service_banner_line	naslFunctionArgs
+  HiLink	naslFuncXget_service_banner_line	naslFunctionCalls
+  HiLink naslArgXget_rpc_port	naslFunctionArgs
+  HiLink	naslFuncXget_rpc_port	naslFunctionCalls
+  HiLink naslArgXrand_str	naslFunctionArgs
+  HiLink	naslFuncXrand_str	naslFunctionCalls
+  HiLink naslArgXadd_port_in_list	naslFunctionArgs
+  HiLink	naslFuncXadd_port_in_list	naslFunctionCalls
+  HiLink naslArgXis_private_addr	naslFunctionArgs
+  HiLink	naslFuncXis_private_addr	naslFunctionCalls
+" nfs_func.inc
+  HiLink naslArgXpadsz	naslFunctionArgs
+  HiLink	naslFuncXpadsz	naslFunctionCalls
+  HiLink naslArgXrpclong	naslFunctionArgs
+  HiLink	naslFuncXrpclong	naslFunctionCalls
+  HiLink naslArgXstr2long	naslFunctionArgs
+  HiLink	naslFuncXstr2long	naslFunctionCalls
+  HiLink naslArgXrpcpad	naslFunctionArgs
+  HiLink	naslFuncXrpcpad	naslFunctionCalls
+  HiLink naslArgXmount	naslFunctionArgs
+  HiLink	naslFuncXmount	naslFunctionCalls
+  HiLink naslArgXreaddir	naslFunctionArgs
+  HiLink	naslFuncXreaddir	naslFunctionCalls
+  HiLink naslArgXcwd	naslFunctionArgs
+  HiLink	naslFuncXcwd	naslFunctionCalls
+  HiLink naslArgXopen	naslFunctionArgs
+  HiLink	naslFuncXopen	naslFunctionCalls
+  HiLink naslArgXread	naslFunctionArgs
+  HiLink	naslFuncXread	naslFunctionCalls
+  HiLink naslArgXumount	naslFunctionArgs
+  HiLink	naslFuncXumount	naslFunctionCalls
+" ping_pong.inc
+  HiLink naslArgXudp_ping_pong	naslFunctionArgs
+" smb_nt.inc
+  HiLink	naslFuncXkb_smb_name	naslFunctionCalls
+  HiLink	naslFuncXkb_smb_domain	naslFunctionCalls
+  HiLink	naslFuncXkb_smb_login	naslFunctionCalls
+  HiLink	naslFuncXkb_smb_password	naslFunctionCalls
+  HiLink	naslFuncXkb_smb_transport	naslFunctionCalls
+  HiLink naslArgXsmb_recv	naslFunctionArgs
+  HiLink	naslFuncXsmb_recv	naslFunctionCalls
+  HiLink naslArgXnetbios_name	naslFunctionArgs
+  HiLink	naslFuncXnetbios_name	naslFunctionCalls
+  HiLink	naslFuncXnetbios_redirector_name	naslFunctionCalls
+  HiLink naslArgXunicode	naslFunctionArgs
+  HiLink	naslFuncXunicode	naslFunctionCalls
+  HiLink naslArgXsmb_session_request	naslFunctionArgs
+  HiLink	naslFuncXsmb_session_request	naslFunctionCalls
+  HiLink naslArgXsession_extract_uid	naslFunctionArgs
+  HiLink	naslFuncXsession_extract_uid	naslFunctionCalls
+  HiLink naslArgXsmb_neg_prot_cleartext	naslFunctionArgs
+  HiLink	naslFuncXsmb_neg_prot_cleartext	naslFunctionCalls
+  HiLink naslArgXsmb_neg_prot_NTLMv1	naslFunctionArgs
+  HiLink	naslFuncXsmb_neg_prot_NTLMv1	naslFunctionCalls
+  HiLink naslArgXsmb_neg_prot	naslFunctionArgs
+  HiLink	naslFuncXsmb_neg_prot	naslFunctionCalls
+  HiLink naslArgXsmb_neg_prot_value	naslFunctionArgs
+  HiLink	naslFuncXsmb_neg_prot_value	naslFunctionCalls
+  HiLink naslArgXsmb_neg_prot_cs	naslFunctionArgs
+  HiLink	naslFuncXsmb_neg_prot_cs	naslFunctionCalls
+  HiLink naslArgXsmb_neg_prot_domain	naslFunctionArgs
+  HiLink	naslFuncXsmb_neg_prot_domain	naslFunctionCalls
+  HiLink naslArgXsmb_session_setup_cleartext	naslFunctionArgs
+  HiLink	naslFuncXsmb_session_setup_cleartext	naslFunctionCalls
+  HiLink naslArgXsmb_session_setup_NTLMvN	naslFunctionArgs
+  HiLink	naslFuncXsmb_session_setup_NTLMvN	naslFunctionCalls
+  HiLink naslArgXsmb_session_setup	naslFunctionArgs
+  HiLink	naslFuncXsmb_session_setup	naslFunctionCalls
+  HiLink naslArgXsmb_tconx	naslFunctionArgs
+  HiLink	naslFuncXsmb_tconx	naslFunctionCalls
+  HiLink naslArgXtconx_extract_tid	naslFunctionArgs
+  HiLink	naslFuncXtconx_extract_tid	naslFunctionCalls
+  HiLink naslArgXsmbntcreatex	naslFunctionArgs
+  HiLink	naslFuncXsmbntcreatex	naslFunctionCalls
+  HiLink naslArgXsmbntcreatex_extract_pipe	naslFunctionArgs
+  HiLink	naslFuncXsmbntcreatex_extract_pipe	naslFunctionCalls
+  HiLink naslArgXpipe_accessible_registry	naslFunctionArgs
+  HiLink	naslFuncXpipe_accessible_registry	naslFunctionCalls
+  HiLink naslArgXregistry_access_step_1	naslFunctionArgs
+  HiLink	naslFuncXregistry_access_step_1	naslFunctionCalls
+  HiLink naslArgXregistry_get_key	naslFunctionArgs
+  HiLink	naslFuncXregistry_get_key	naslFunctionCalls
+  HiLink naslArgXregistry_key_writeable_by_non_admin	naslFunctionArgs
+  HiLink	naslFuncXregistry_key_writeable_by_non_admin	naslFunctionCalls
+  HiLink naslArgXregistry_get_key_security	naslFunctionArgs
+  HiLink	naslFuncXregistry_get_key_security	naslFunctionCalls
+  HiLink naslArgXregistry_get_acl	naslFunctionArgs
+  HiLink	naslFuncXregistry_get_acl	naslFunctionCalls
+  HiLink naslArgXunicode2	naslFunctionArgs
+  HiLink	naslFuncXunicode2	naslFunctionCalls
+  HiLink naslArgXregistry_get_item_sz	naslFunctionArgs
+  HiLink	naslFuncXregistry_get_item_sz	naslFunctionCalls
+  HiLink naslArgXregistry_decode_sz	naslFunctionArgs
+  HiLink	naslFuncXregistry_decode_sz	naslFunctionCalls
+  HiLink naslArgXregistry_get_item_dword	naslFunctionArgs
+  HiLink	naslFuncXregistry_get_item_dword	naslFunctionCalls
+  HiLink naslArgXregistry_decode_dword	naslFunctionArgs
+  HiLink	naslFuncXregistry_decode_dword	naslFunctionCalls
+  HiLink naslArgXregistry_get_dword	naslFunctionArgs
+  HiLink	naslFuncXregistry_get_dword	naslFunctionCalls
+  HiLink naslArgXregistry_get_sz	naslFunctionArgs
+  HiLink	naslFuncXregistry_get_sz	naslFunctionCalls
+  HiLink naslArgXOpenPipeToSamr	naslFunctionArgs
+  HiLink	naslFuncXOpenPipeToSamr	naslFunctionCalls
+  HiLink naslArgXsamr_smbwritex	naslFunctionArgs
+  HiLink	naslFuncXsamr_smbwritex	naslFunctionCalls
+  HiLink naslArgXsamr_smbreadx	naslFunctionArgs
+  HiLink	naslFuncXsamr_smbreadx	naslFunctionCalls
+  HiLink naslArgXsamr_uc	naslFunctionArgs
+  HiLink	naslFuncXsamr_uc	naslFunctionCalls
+  HiLink naslArgXSamrConnect2	naslFunctionArgs
+  HiLink	naslFuncXSamrConnect2	naslFunctionCalls
+  HiLink naslArgXSamrDom2Sid	naslFunctionArgs
+  HiLink	naslFuncXSamrDom2Sid	naslFunctionCalls
+  HiLink naslArgXSamrOpenDomain	naslFunctionArgs
+  HiLink	naslFuncXSamrOpenDomain	naslFunctionCalls
+  HiLink naslArgXSamrOpenBuiltin	naslFunctionArgs
+  HiLink	naslFuncXSamrOpenBuiltin	naslFunctionCalls
+  HiLink naslArgXSamrLookupNames	naslFunctionArgs
+  HiLink	naslFuncXSamrLookupNames	naslFunctionCalls
+  HiLink naslArgXSamrOpenUser	naslFunctionArgs
+  HiLink	naslFuncXSamrOpenUser	naslFunctionCalls
+  HiLink naslArgXSamrQueryUserGroups	naslFunctionArgs
+  HiLink	naslFuncXSamrQueryUserGroups	naslFunctionCalls
+  HiLink naslArgXSamrQueryUserInfo	naslFunctionArgs
+  HiLink	naslFuncXSamrQueryUserInfo	naslFunctionCalls
+  HiLink naslArgXSamrQueryUserAliases	naslFunctionArgs
+  HiLink	naslFuncXSamrQueryUserAliases	naslFunctionCalls
+  HiLink naslArgXOpenAndX	naslFunctionArgs
+  HiLink	naslFuncXOpenAndX	naslFunctionCalls
+  HiLink naslArgXReadAndX	naslFunctionArgs
+  HiLink	naslFuncXReadAndX	naslFunctionCalls
+  HiLink naslArgXsmb_get_file_size	naslFunctionArgs
+  HiLink	naslFuncXsmb_get_file_size	naslFunctionCalls
+  HiLink naslArgXFindFirst2	naslFunctionArgs
+  HiLink	naslFuncXFindFirst2	naslFunctionCalls
+" smtp_func.inc
+  HiLink naslArgXsmtp_close	naslFunctionArgs
+  HiLink	naslFuncXsmtp_close	naslFunctionCalls
+  HiLink naslArgXsmtp_open	naslFunctionArgs
+  HiLink	naslFuncXsmtp_open	naslFunctionCalls
+  HiLink naslArgXsmtp_send_socket	naslFunctionArgs
+  HiLink	naslFuncXsmtp_send_socket	naslFunctionCalls
+  HiLink naslArgXsmtp_send_port	naslFunctionArgs
+  HiLink	naslFuncXsmtp_send_port	naslFunctionCalls
+  HiLink	naslFuncXsmtp_from_header	naslFunctionCalls
+  HiLink	naslFuncXsmtp_to_header	naslFunctionCalls
+  HiLink naslArgXget_smtp_banner	naslFunctionArgs
+  HiLink	naslFuncXget_smtp_banner	naslFunctionCalls
+  HiLink naslArgXsmtp_recv_line	naslFunctionArgs
+  HiLink	naslFuncXsmtp_recv_line	naslFunctionCalls
+  HiLink naslArgXsmtp_recv_banner	naslFunctionArgs
+  HiLink	naslFuncXsmtp_recv_banner	naslFunctionCalls
+" telnet_func.inc
+  HiLink naslArgXget_telnet_banner	naslFunctionArgs
+  HiLink	naslFuncXget_telnet_banner	naslFunctionCalls
+  HiLink naslArgXset_telnet_banner	naslFunctionArgs
+  HiLink	naslFuncXset_telnet_banner	naslFunctionCalls
+" uddi.inc
+  HiLink naslArgXcreate_uddi_xml 	naslFunctionArgs
+  HiLink	naslFuncXcreate_uddi_xml 	naslFunctionCalls
 
   delcommand HiLink
 endif
