@@ -1,0 +1,6 @@
+This is a mirror of http://www.vim.org/scripts/script.php?script_id=843
+
+Performs syntax highlighting for Nessus Attack Scripting
+Language (NASL) scripts.
+
+This is still in rapid development, and by no means finished.  But, it's already useful, so I thought I would share it.
